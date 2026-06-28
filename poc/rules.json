@@ -1,0 +1,122 @@
+[
+  {
+    "rule_id": "R-001",
+    "cpt": "59400",
+    "category": "sex_restriction",
+    "sex": "F",
+    "description": "CPT 59400 (routine obstetric care incl. vaginal delivery) is valid only for female patients.",
+    "source": "CMS NCCI Policy Manual 2024; CPT 2024 (synthetic simplification)"
+  },
+  {
+    "rule_id": "R-002",
+    "cpt": "59400",
+    "category": "allowed_dx",
+    "allowed_icd": ["O80", "O80.0", "O80.1", "Z37.0", "Z34.0", "Z34.90"],
+    "description": "CPT 59400 must be billed with a pregnancy/delivery diagnosis (ICD-10 O80.x, Z37.0, or Z34.x).",
+    "source": "ICD-10-CM 2024 Chapter 15 (synthetic simplification)"
+  },
+  {
+    "rule_id": "R-003",
+    "cpt": "59400",
+    "category": "max_amount",
+    "max_billed_amount": 4000,
+    "description": "Hard policy cap: billed amount for CPT 59400 may not exceed $4,000.",
+    "source": "Synthetic payer fee-schedule cap"
+  },
+  {
+    "rule_id": "R-004",
+    "cpt": "45378",
+    "category": "age_range",
+    "min_age": 45,
+    "description": "Screening colonoscopy (CPT 45378) is guideline-recommended at age 45+. Younger patients require a documented diagnostic indication and should be reviewed.",
+    "source": "USPSTF colorectal screening guidance 2021 (synthetic simplification)"
+  },
+  {
+    "rule_id": "R-005",
+    "cpt": "45378",
+    "category": "allowed_dx",
+    "allowed_icd": ["Z12.11", "K63.5", "K57.30", "D12.6", "K51.90", "R19.5", "K92.1"],
+    "description": "CPT 45378 (diagnostic colonoscopy) must carry a GI-related diagnosis (screening, polyp, diverticulosis, bleeding, etc.).",
+    "source": "ICD-10-CM 2024 Chapter 11 (synthetic simplification)"
+  },
+  {
+    "rule_id": "R-006",
+    "cpt": "45378",
+    "category": "max_amount",
+    "max_billed_amount": 1800,
+    "description": "Hard policy cap: billed amount for CPT 45378 may not exceed $1,800.",
+    "source": "Synthetic payer fee-schedule cap"
+  },
+  {
+    "rule_id": "R-007",
+    "cpt": "99213",
+    "category": "max_amount",
+    "max_billed_amount": 200,
+    "description": "Hard policy cap: billed amount for CPT 99213 (office visit, low complexity) may not exceed $200.",
+    "source": "Synthetic payer fee-schedule cap"
+  },
+  {
+    "rule_id": "R-008",
+    "cpt": "99214",
+    "category": "max_amount",
+    "max_billed_amount": 350,
+    "description": "Hard policy cap: billed amount for CPT 99214 (office visit, moderate complexity) may not exceed $350.",
+    "source": "Synthetic payer fee-schedule cap"
+  },
+  {
+    "rule_id": "R-009",
+    "cpt": "93000",
+    "category": "allowed_dx",
+    "allowed_icd": ["I10", "I48.91", "R00.2", "R07.9", "I25.10", "R94.31"],
+    "description": "CPT 93000 (ECG) must carry a cardiac-related diagnosis.",
+    "source": "ICD-10-CM 2024 Chapter 9 (synthetic simplification)"
+  },
+  {
+    "rule_id": "R-010",
+    "cpt": "93000",
+    "category": "max_amount",
+    "max_billed_amount": 150,
+    "description": "Hard policy cap: billed amount for CPT 93000 may not exceed $150.",
+    "source": "Synthetic payer fee-schedule cap"
+  },
+  {
+    "rule_id": "R-011",
+    "cpt": "70450",
+    "category": "allowed_dx",
+    "allowed_icd": ["R51", "R51.9", "S06.0X0A", "R55", "G43.909", "R41.0"],
+    "description": "CPT 70450 (CT head without contrast) must carry a head/neuro-related diagnosis (headache, syncope, head injury, etc.).",
+    "source": "ICD-10-CM 2024 (synthetic simplification)"
+  },
+  {
+    "rule_id": "R-012",
+    "cpt": "70450",
+    "category": "max_amount",
+    "max_billed_amount": 1500,
+    "description": "Hard policy cap: billed amount for CPT 70450 may not exceed $1,500.",
+    "source": "Synthetic payer fee-schedule cap"
+  },
+  {
+    "rule_id": "R-013",
+    "cpt": "27447",
+    "category": "age_range",
+    "min_age": 40,
+    "description": "Total knee arthroplasty (CPT 27447) in patients under 40 is uncommon and should be reviewed for medical necessity.",
+    "source": "Synthetic clinical-policy guideline"
+  },
+  {
+    "rule_id": "R-014",
+    "cpt": "27447",
+    "category": "allowed_dx",
+    "allowed_icd": ["M17.0", "M17.10", "M17.11", "M17.12", "M17.9"],
+    "description": "CPT 27447 (total knee arthroplasty) must carry a knee osteoarthritis diagnosis (ICD-10 M17.x).",
+    "source": "ICD-10-CM 2024 Chapter 13 (synthetic simplification)"
+  },
+  {
+    "rule_id": "R-015",
+    "cpt": "27447",
+    "category": "max_amount",
+    "max_billed_amount": 50000,
+    "description": "Hard policy cap: billed amount for CPT 27447 may not exceed $50,000. NOTE: this is a generous hard ceiling; the statistical amount_anomaly check is a separate, tighter signal.",
+    "source": "Synthetic payer fee-schedule cap"
+  }
+]

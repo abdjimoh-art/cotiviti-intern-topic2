@@ -1,0 +1,112 @@
+[
+  {
+    "claim_id": "CL-001",
+    "member_id": "M1001",
+    "cpt": "99213",
+    "icd": "E11.9",
+    "patient_age": 45,
+    "patient_sex": "F",
+    "billed_amount": 130.00,
+    "provider_id": "PRV-200",
+    "_note": "clean office visit"
+  },
+  {
+    "claim_id": "CL-002",
+    "member_id": "M1002",
+    "cpt": "59400",
+    "icd": "O80",
+    "patient_age": 29,
+    "patient_sex": "F",
+    "billed_amount": 2800.00,
+    "provider_id": "PRV-201",
+    "_note": "clean obstetric delivery"
+  },
+  {
+    "claim_id": "CL-003",
+    "member_id": "M1003",
+    "cpt": "45378",
+    "icd": "Z12.11",
+    "patient_age": 52,
+    "patient_sex": "M",
+    "billed_amount": 1100.00,
+    "provider_id": "PRV-202",
+    "_note": "clean screening colonoscopy, age 52"
+  },
+  {
+    "claim_id": "CL-004",
+    "member_id": "M1004",
+    "cpt": "93000",
+    "icd": "I10",
+    "patient_age": 60,
+    "patient_sex": "M",
+    "billed_amount": 95.00,
+    "provider_id": "PRV-203",
+    "_note": "clean ECG"
+  },
+  {
+    "claim_id": "CL-005",
+    "member_id": "M1005",
+    "cpt": "45378",
+    "icd": "J45.909",
+    "patient_age": 55,
+    "patient_sex": "M",
+    "billed_amount": 1050.00,
+    "provider_id": "PRV-202",
+    "_note": "BROKEN: dx/procedure mismatch (asthma dx on a colonoscopy)"
+  },
+  {
+    "claim_id": "CL-006",
+    "member_id": "M1006",
+    "cpt": "59400",
+    "icd": "O80",
+    "patient_age": 34,
+    "patient_sex": "M",
+    "billed_amount": 2750.00,
+    "provider_id": "PRV-201",
+    "_note": "BROKEN: sex conflict (male patient on a female-only obstetric code)"
+  },
+  {
+    "claim_id": "CL-007",
+    "member_id": "M1007",
+    "cpt": "27447",
+    "icd": "M17.11",
+    "patient_age": 68,
+    "patient_sex": "M",
+    "billed_amount": 48000.00,
+    "provider_id": "PRV-204",
+    "_note": "BROKEN: amount outlier (passes all hard rules; >5 sigma vs history)"
+  },
+  {
+    "claim_id": "CL-008",
+    "member_id": "M1008",
+    "cpt": "99214",
+    "icd": "E11.9",
+    "patient_age": 50,
+    "patient_sex": "F",
+    "billed_amount": 300.00,
+    "provider_id": "PRV-200",
+    "_note": "EDGE: member eligibility inactive (coverage terminated)"
+  },
+  {
+    "claim_id": "CL-009",
+    "member_id": "M1009",
+    "cpt": "45378",
+    "icd": "Z12.11",
+    "patient_age": 39,
+    "patient_sex": "M",
+    "billed_amount": 1000.00,
+    "provider_id": "PRV-202",
+    "_note": "EDGE: screening colonoscopy below guideline age 45"
+  },
+  {
+    "claim_id": "CL-010",
+    "member_id": "M1010",
+    "cpt": "70450",
+    "icd": "R51",
+    "patient_age": 47,
+    "patient_sex": "F",
+    "billed_amount": 1150.00,
+    "provider_id": "PRV-205",
+    "_note": "clean CT head; amount is a near-miss (z~2) that must NOT trip the anomaly tool"
+  }
+]
