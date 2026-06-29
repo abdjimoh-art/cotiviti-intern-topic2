@@ -40,7 +40,8 @@ from groq import Groq
 # --------------------------------------------------------------------------- #
 # Config
 # --------------------------------------------------------------------------- #
-MODEL = "llama-3.3-70b-versatile"        # fallback: "llama-3.1-8b-instant"
+# Override with GROQ_MODEL env var (e.g. the lighter fallback if 70B is rate-limited).
+MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")  # fallback: "llama-3.1-8b-instant"
 CONFIDENCE_THRESHOLD = 0.85              # routing cutoff for AUTO-CLEAR
 ANOMALY_SIGMA = 3.0                      # z-score cutoff for amount_anomaly
 MAX_TURNS = 6                            # safety cap on the agent loop
@@ -226,16 +227,26 @@ DECISION RULE (apply mechanically):
   - decision = "APPROVE" only if every rule passes, the member is eligible, and
     there is no anomaly.
 
-CONFIDENCE: a float 0..1 for how unambiguous the evidence is. Use >= 0.9 for
-clear-cut clean approvals and clear-cut violations; use ~0.6-0.8 only when the
-case is genuinely borderline.
+CONFIDENCE: a calibrated float 0..1 — this score DRIVES ROUTING, so do not
+inflate it. Calibrate it from the evidence:
+  - >= 0.9 for clear-cut decisions: a clean approval where every signal is
+    comfortably clear (amount_anomaly |z_score| < 2), or a clear-cut violation.
+  - ~0.75 when you APPROVE (no rule violated, eligible, is_anomaly == false) but
+    a signal is borderline — in particular when amount_anomaly's |z_score| is
+    ELEVATED (between 2 and 3, i.e. unusually high yet below the 3σ cutoff). The
+    claim still passes, but the elevated amount is genuine uncertainty: add a
+    reason noting it. Keep this low (~0.75) on purpose so a borderline-but-clean
+    claim can be routed to a human by the confidence threshold even though
+    nothing is outright flagged. A borderline approval must NOT read as 0.9.
 
 When finished, respond with ONLY a JSON object (no markdown, no prose):
 {{
   "rule_checks": [
     {{"rule_id": "R-005", "category": "allowed_dx", "status": "pass" | "violation",
       "detail": "claim.icd 'J45.909' is not in allowed_icd [...] -> violation"}}
-    // one entry per rule from lookup_policy, plus one for "eligibility" and one for "amount_anomaly"
+    // one entry per rule from lookup_policy, PLUS one for eligibility
+    // (rule_id "eligibility", category "eligibility") and one for the anomaly
+    // check (rule_id "amount_anomaly", category "anomaly"). Never use null ids.
   ],
   "decision": "APPROVE" | "FLAG_FOR_REVIEW",
   "reasons": ["short bullet for each violation citing its rule_id/signal", ...],
@@ -349,6 +360,18 @@ def review_claim(claim: dict, client: Groq, on_step=None):
         # No tool calls => this is the final verdict.
         result = _parse_decision(msg.content)
         result["confidence"] = float(result.get("confidence", 0.0) or 0.0)
+
+        # Deterministic guardrail: a clean APPROVE whose amount is elevated but
+        # below the 3σ cutoff (2 ≤ |z| ≤ 3) carries genuine uncertainty, so cap
+        # its confidence under the auto-clear threshold. This makes pillar ②
+        # (confidence → routing) reproducible regardless of the LLM's own score.
+        anom = next((s["observation"] for s in steps
+                     if s["kind"] == "tool" and s["tool"] == "amount_anomaly"), None)
+        if result.get("decision") == "APPROVE" and anom:
+            z = abs(anom.get("z_score", 0.0))
+            if 2.0 <= z <= ANOMALY_SIGMA:
+                result["confidence"] = min(result["confidence"], 0.75)
+
         result["routing"] = compute_routing(result.get("decision", ""), result["confidence"])
         emit({"kind": "final", "result": result, "raw": msg.content})
         return result, steps
@@ -375,6 +398,9 @@ EXPECTED = {
     "CL-009": "FLAG_FOR_REVIEW", "CL-010": "APPROVE",
 }
 EXPECTED_ANOMALY = {"CL-007"}  # the only claim whose amount_anomaly must fire
+# Claims that should APPROVE but route to a human on CONFIDENCE ALONE (no flag) —
+# this is what makes pillar ② (confidence-as-a-threshold) visibly do work.
+EXPECTED_SUBCUTOFF_ROUTE = {"CL-010"}
 
 
 def _print_steps(steps):
@@ -437,11 +463,20 @@ def main():
             checks += 1
             ok = result["decision"] == exp
             anom_ok = _anomaly_fired(steps) == (cid in EXPECTED_ANOMALY)
-            passes += 1 if (ok and anom_ok) else 0
-            verdict = "PASS" if (ok and anom_ok) else "FAIL"
+            # For the sub-cutoff claim, the verdict must be APPROVE yet routing
+            # must still be ROUTE_TO_HUMAN purely because confidence < threshold.
+            route_ok = (cid not in EXPECTED_SUBCUTOFF_ROUTE) or (
+                result["decision"] == "APPROVE"
+                and result["confidence"] < CONFIDENCE_THRESHOLD
+                and result.get("routing") == "ROUTE_TO_HUMAN")
+            passes += 1 if (ok and anom_ok and route_ok) else 0
+            verdict = "PASS" if (ok and anom_ok and route_ok) else "FAIL"
             detail = "" if ok else f" (expected {exp}, got {result['decision']})"
             if not anom_ok:
                 detail += " (anomaly-fire mismatch)"
+            if not route_ok:
+                detail += (f" (expected sub-cutoff route to human, got "
+                           f"conf={result['confidence']:.2f}/{result.get('routing')})")
             print(f"    [{verdict}]{detail}")
         time.sleep(0.3)  # be gentle with the free-tier rate limit
 
@@ -517,9 +552,18 @@ def run_streamlit_app():
 
     # ---- Run the agent on click; cache the result so slider reruns are free ----
     if st.button("🔍 Review claim", type="primary", use_container_width=True):
-        with st.spinner("Agent is reviewing the claim… (Groq + 3 tool calls)"):
-            result, steps = review_claim(claim, _client())
-        st.session_state["review"] = {"claim_id": selected_id, "result": result, "steps": steps}
+        try:
+            with st.spinner("Agent is reviewing the claim… (Groq + 3 tool calls)"):
+                result, steps = review_claim(claim, _client())
+            st.session_state["review"] = {"claim_id": selected_id, "result": result, "steps": steps}
+        except Exception as e:
+            msg = str(e)
+            if "rate_limit" in msg or "429" in msg:
+                st.error("Groq rate limit reached (free tier). Wait a moment, or set "
+                         "`GROQ_MODEL=llama-3.1-8b-instant` to use the lighter fallback model.")
+            else:
+                st.error(f"Agent call failed: {msg}")
+            st.stop()
 
     review = st.session_state.get("review")
     if not review or review["claim_id"] != selected_id:
@@ -558,10 +602,15 @@ def run_streamlit_app():
     routing = compute_routing(decision, confidence, threshold)
 
     st.subheader("② Verdict & routing")
-    if decision == "APPROVE":
-        st.success("### ✅ APPROVE")
-    else:
-        st.warning("### 🚩 FLAG FOR REVIEW")
+    # High-contrast verdict banner (legible on a screen recording): green for
+    # APPROVE, red reserved for FLAG.
+    bg, icon, label = (("#157347", "✅", "APPROVE") if decision == "APPROVE"
+                       else ("#C0392B", "🚩", "FLAG FOR REVIEW"))
+    st.markdown(
+        f"<div style='background:{bg};color:#fff;padding:14px 18px;border-radius:8px;"
+        f"font-size:1.5rem;font-weight:800;letter-spacing:.5px;'>{icon}&nbsp;&nbsp;{label}</div>",
+        unsafe_allow_html=True)
+    st.write("")
 
     c1, c2 = st.columns(2)
     with c1:
@@ -570,12 +619,15 @@ def run_streamlit_app():
         st.caption(f"AUTO-CLEAR cutoff = {threshold:.0%}")
     with c2:
         if routing == "AUTO_CLEAR":
-            st.success(f"**Routing: AUTO-CLEAR**\n\nHigh-confidence approval ≥ cutoff "
-                       f"({confidence:.0%} ≥ {threshold:.0%}) — no human needed.")
+            st.success(f"**Routing: AUTO-CLEAR**\n\nHigh-confidence approval "
+                       f"({confidence:.0%} ≥ {threshold:.0%} cutoff) — no human needed.")
+        elif decision != "APPROVE":
+            st.error("**Routing: ROUTE TO HUMAN**\n\nClaim was flagged — "
+                     "routing to a human reviewer.")
         else:
-            why = ("flagged" if decision != "APPROVE"
-                   else f"approval below cutoff ({confidence:.0%} < {threshold:.0%})")
-            st.error(f"**Routing: ROUTE TO HUMAN**\n\nReason: {why}.")
+            st.error(f"**Routing: ROUTE TO HUMAN**\n\nApproved, but confidence "
+                     f"({confidence:.0%}) is below the auto-clear cutoff "
+                     f"({threshold:.0%}) — routing to a human reviewer.")
 
     st.markdown("**Reasons**")
     for r in result.get("reasons", []):
@@ -583,9 +635,14 @@ def run_streamlit_app():
     st.markdown(f"**Recommended action:** {result.get('recommended_action', '—')}")
 
     if result.get("rule_checks"):
+        # Sanitize: the eligibility / anomaly checks have no rule_id, which would
+        # otherwise render as literal "None" in the table.
+        clean = [{"rule_id": (c.get("rule_id") or c.get("category") or "—"),
+                  "category": (c.get("category") or "—"),
+                  "status": c.get("status", "—"),
+                  "detail": c.get("detail", "")} for c in result["rule_checks"]]
         with st.expander("Per-rule check detail"):
-            st.dataframe(pd.DataFrame(result["rule_checks"]),
-                         hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(clean), hide_index=True, use_container_width=True)
 
     # ---- (3) Independent anomaly signal + chart ----
     anom = next((s["observation"] for s in steps
@@ -602,7 +659,7 @@ def run_streamlit_app():
     m3.metric("z-score", f"{z:.2f}", delta=("ANOMALY" if anom.get("is_anomaly") else "normal"),
               delta_color=("inverse" if anom.get("is_anomaly") else "off"))
 
-    hist = BILLING_HISTORY.get(claim["cpt"], [])
+    hist = BILLING_HISTORY.get(str(claim["cpt"]), [])
     dfh = pd.DataFrame({"amount": hist})
     bars = alt.Chart(dfh).mark_bar(opacity=0.8, color="#4C78A8").encode(
         x=alt.X("amount:Q", bin=alt.Bin(maxbins=18),

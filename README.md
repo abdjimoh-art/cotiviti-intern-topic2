@@ -73,6 +73,10 @@ streamlit run poc/app.py              # opens http://localhost:8501
 The app reads `GROQ_API_KEY` from the environment (or `poc/.env`). The key is
 **never** committed — see *Security* below.
 
+> Groq's free tier has a daily token cap. If the 70B model is rate-limited, set
+> `GROQ_MODEL=llama-3.1-8b-instant` to switch to the lighter fallback (the demo
+> is tuned for the 70B model, which reasons more reliably over the rules).
+
 ---
 
 ## What's in the box
@@ -101,11 +105,12 @@ video/                   # recorded walkthrough (MP4)
 | CL-007 | amount outlier | FLAG | passes every hard rule, but **amount_anomaly z≈5.8** |
 | CL-008 | ineligible member | FLAG | coverage terminated |
 | CL-009 | age edge | FLAG | screening colonoscopy at age 39 < guideline age 45 (**R-004**) |
-| CL-010 | near-miss amount | APPROVE | z≈2.0 < 3 → anomaly correctly does **not** fire |
+| CL-010 | near-miss amount | APPROVE → **ROUTE TO HUMAN** | z≈2.0: anomaly doesn't fire, but the elevated amount caps confidence below the cutoff → routed on **confidence alone** (pillar ②) |
 
 Running `python poc/app.py` prints each reasoning step and a
-`10/10 claims matched expected` acceptance summary (deterministic at
-temperature 0).
+`10/10 claims matched expected` acceptance summary (reproducible in practice at
+temperature 0; CL-010's sub-cutoff routing is enforced deterministically in
+code, not left to the model's self-reported confidence).
 
 ---
 

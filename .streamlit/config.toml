@@ -1,0 +1,6 @@
+# Demo theme. A teal accent drives the "Review" button, the confidence bar, and
+# the slider — so RED is reserved for the FLAG / route-to-human state and the
+# palette stays coherent (green = cleared, red = needs attention, teal = neutral UI).
+[theme]
+base = "light"
+primaryColor = "#0E7C7B"

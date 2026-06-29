@@ -107,6 +107,6 @@
     "patient_sex": "F",
     "billed_amount": 1150.00,
     "provider_id": "PRV-205",
-    "_note": "clean CT head; amount is a near-miss (z~2) that must NOT trip the anomaly tool"
+    "_note": "clean on all hard rules, but amount is elevated (z~2, below the 3-sigma cutoff) -> APPROVE at sub-cutoff confidence -> routes to a human. Demonstrates confidence-based routing."
   }
 ]
