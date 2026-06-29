@@ -548,7 +548,9 @@ def run_streamlit_app():
     left, right = st.columns([2, 1])
     with left:
         st.subheader(f"Claim {claim['claim_id']}")
-        meta = {k: v for k, v in claim.items() if not k.startswith("_")}
+        # Stringify values: the claim mixes str/int/float, and a mixed-type
+        # column makes Streamlit's Arrow serialization raise ArrowTypeError.
+        meta = {k: str(v) for k, v in claim.items() if not k.startswith("_")}
         st.dataframe(pd.DataFrame(meta.items(), columns=["field", "value"]),
                      hide_index=True, use_container_width=True)
     with right:
