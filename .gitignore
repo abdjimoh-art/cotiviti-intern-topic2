@@ -11,5 +11,8 @@ venv/
 # OS
 .DS_Store
 
+# Microsoft Office lock/temp files (e.g. ~$Cotiviti-Topic2.pptx)
+~$*
+
 # Playwright MCP scratch (snapshots/console logs from local UI verification)
 .playwright-mcp/
