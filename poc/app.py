@@ -365,9 +365,13 @@ def review_claim(claim: dict, client: Groq, on_step=None):
         # below the 3σ cutoff (2 ≤ |z| ≤ 3) carries genuine uncertainty, so cap
         # its confidence under the auto-clear threshold. This makes pillar ②
         # (confidence → routing) reproducible regardless of the LLM's own score.
+        # Use the agent's amount_anomaly observation if it called the tool;
+        # otherwise compute it directly from the claim so the cap applies every run.
         anom = next((s["observation"] for s in steps
                      if s["kind"] == "tool" and s["tool"] == "amount_anomaly"), None)
-        if result.get("decision") == "APPROVE" and anom:
+        if anom is None:
+            anom = amount_anomaly(str(claim["cpt"]), claim["billed_amount"])
+        if result.get("decision") == "APPROVE":
             z = abs(anom.get("z_score", 0.0))
             if 2.0 <= z <= ANOMALY_SIGMA:
                 result["confidence"] = min(result["confidence"], 0.75)

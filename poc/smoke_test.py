@@ -17,7 +17,7 @@ import sys
 
 from groq import Groq
 
-MODEL = "llama-3.3-70b-versatile"  # fallback: "llama-3.1-8b-instant"
+MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")  # fallback: "llama-3.1-8b-instant"
 
 # A trivial tool so we can prove the model chooses to call it.
 TOOLS = [
