@@ -26,7 +26,7 @@ is **ROUTED TO A HUMAN**.
 |---|---|
 | 📄 **Written report** — 2 pages + bibliography | [PDF](report/Cotiviti-Topic2-Report.pdf) · [Word](report/Cotiviti-Topic2-Report.docx) |
 | 🖥️ **Slide overview** — 11 slides | [PDF](slides/Cotiviti-Topic2.pdf) · [PowerPoint](slides/Cotiviti-Topic2.pptx) |
-| 🎥 **Video walkthrough** — slides + live demo, presenter on camera | [MP4](video/Cotiviti-Topic2-Video.mp4) |
+| 🎥 **Video walkthrough** — slides + live demo, presenter on camera | [MP4](video/Cotiviti-Topic2-Video.mp4) — open it and click **View raw** to play/download |
 | 🤖 **Proof-of-concept** — this repo | [poc/app.py](poc/app.py) · run steps below |
 
 ---
@@ -102,7 +102,7 @@ poc/
   requirements.txt       # streamlit, groq, pandas, numpy, scipy
   .env.example           # GROQ_API_KEY=
 report/                  # 2-page written report — PDF + Word, with bibliography
-slides/                  # 11-slide overview — PDF + PowerPoint (+ screenshot assets)
+slides/                  # 11-slide overview — PDF + PowerPoint
 video/                   # recorded walkthrough (MP4): slides + live POC demo, presenter on camera
 ```
 
