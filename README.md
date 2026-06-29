@@ -20,6 +20,17 @@ is **ROUTED TO A HUMAN**.
 
 ---
 
+## Deliverables
+
+| Deliverable | Open |
+|---|---|
+| 📄 **Written report** — 2 pages + bibliography | [PDF](report/Cotiviti-Topic2-Report.pdf) · [Word](report/Cotiviti-Topic2-Report.docx) |
+| 🖥️ **Slide overview** — 11 slides | [PDF](slides/Cotiviti-Topic2.pdf) · [PowerPoint](slides/Cotiviti-Topic2.pptx) |
+| 🎥 **Video walkthrough** — slides + live demo, presenter on camera | [MP4](video/Cotiviti-Topic2-Video.mp4) |
+| 🤖 **Proof-of-concept** — this repo | [poc/app.py](poc/app.py) · run steps below |
+
+---
+
 ## Why this design (the demo *is* the argument)
 
 The companion report argues for "agentic claim review as a human-in-the-loop
@@ -70,8 +81,8 @@ python poc/app.py                     # or:  python poc/app.py CL-007  (one clai
 streamlit run poc/app.py              # opens http://localhost:8501
 ```
 
-The app reads `GROQ_API_KEY` from the environment (or `poc/.env`). The key is
-**never** committed — see *Security* below.
+The app reads `GROQ_API_KEY` from the environment (or `poc/.env`); `.env` is
+git-ignored, so the key is never committed.
 
 > Groq's free tier has a daily token cap. If the 70B model is rate-limited, set
 > `GROQ_MODEL=llama-3.1-8b-instant` to switch to the lighter fallback (the demo
@@ -90,9 +101,9 @@ poc/
   billing_history.json   # ~24 prior billed amounts per CPT (for the z-score)
   requirements.txt       # streamlit, groq, pandas, numpy, scipy
   .env.example           # GROQ_API_KEY=
-report/                  # 2-page written report (Word) + bibliography
-slides/                  # PowerPoint overview + screenshot assets
-video/                   # recorded walkthrough (MP4)
+report/                  # 2-page written report — PDF + Word, with bibliography
+slides/                  # 11-slide overview — PDF + PowerPoint (+ screenshot assets)
+video/                   # recorded walkthrough (MP4): slides + live POC demo, presenter on camera
 ```
 
 ### The 10 claims & expected behavior
@@ -121,23 +132,6 @@ code, not left to the model's self-reported confidence).
 | `lookup_policy` | `(cpt) → {rules[]}` | Filters `rules.json` for the CPT. **Stand-in for production RAG** — in a real system this would semantically retrieve policy text from a vector store. |
 | `check_eligibility` | `(member_id) → {active, covered}` | Synthetic member/coverage data. |
 | `amount_anomaly` | `(cpt, billed_amount) → {is_anomaly, z_score, mean, std}` | Population z-score vs the CPT's billing history; flags `> 3σ`. **Independent of the LLM.** |
-
----
-
-## Security (this repo is public)
-
-- `.env` is git-ignored; only `.env.example` (no value) is committed.
-- The key is read from `os.environ["GROQ_API_KEY"]` — never hardcoded.
-- No PHI: 100% synthetic data, generated for this demo.
-
----
-
-## Out of scope (kept simple on purpose)
-
-RAG/vector DB, real claims data, auth, persistence, multi-page UI, and cloud
-deploy are intentionally omitted. RAG, clustering, and broader anomaly methods
-are *discussed in the report*, not built here — the prompt grades how well the
-POC "hacks to prove a concept," not its complexity.
 
 ---
 
