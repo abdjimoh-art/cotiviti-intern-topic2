@@ -20,7 +20,8 @@ Design choices that mirror the written report (made visible to the demo):
 
 SYNTHETIC DATA ONLY — NO PHI. Human-in-the-loop: the AI recommends, a human decides.
 
-Phase 2 = this CLI core. Phase 3 adds the Streamlit UI on top of review_claim().
+This single file is both the CLI agent (run it directly) and the Streamlit demo
+UI (run it with `streamlit run`), layered on top of review_claim().
 
 Run (CLI):
     pip install -r requirements.txt
